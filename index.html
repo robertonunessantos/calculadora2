@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Científica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .calculator {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            padding: 1.5rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .display {
+            background-color: #e5e7eb;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: right;
+            overflow: hidden;
+            white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 96px;
+        }
+        .history {
+            color: #6b7280;
+            font-size: 0.875rem;
+            height: 24px;
+            overflow-x: auto;
+        }
+        .current-input {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            height: 48px;
+            overflow-x: auto;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+        }
+        .btn {
+            background-color: #f9fafb;
+            color: #374151;
+            font-size: 1.25rem;
+            font-weight: 500;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .btn:hover {
+            background-color: #e5e7eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn.operator {
+            background-color: #d1d5db;
+            color: #1f2937;
+        }
+        .btn.operator:hover {
+            background-color: #9ca3af;
+        }
+        .btn.equal {
+            grid-column: span 2;
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn.equal:hover {
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <div class="display">
+        <div class="history" id="history"></div>
+        <div class="current-input" id="current-input">0</div>
+    </div>
+    <div class="grid-container">
+        <!-- Linha 1: Funções científicas -->
+        <button class="btn operator" data-value="sin(">sin</button>
+        <button class="btn operator" data-value="cos(">cos</button>
+        <button class="btn operator" data-value="tan(">tan</button>
+        <button class="btn operator" data-value="ln(">ln</button>
+        <button class="btn operator" data-value="log(">log</button>
+
+        <!-- Linha 2 -->
+        <button class="btn" data-value="x^2">x²</button>
+        <button class="btn operator" data-value="sqrt(">√</button>
+        <button class="btn operator" data-value="^">^</button>
+        <button class="btn operator" data-value="AC">AC</button>
+        <button class="btn operator" data-value="DEL">DEL</button>
+
+        <!-- Linha 3 -->
+        <button class="btn" data-value="7">7</button>
+        <button class="btn" data-value="8">8</button>
+        <button class="btn" data-value="9">9</button>
+        <button class="btn operator" data-value="/">/</button>
+        <button class="btn operator" data-value="(">(</button>
+
+        <!-- Linha 4 -->
+        <button class="btn" data-value="4">4</button>
+        <button class="btn" data-value="5">5</button>
+        <button class="btn" data-value="6">6</button>
+        <button class="btn operator" data-value="*">*</button>
+        <button class="btn operator" data-value=")">)</button>
+
+        <!-- Linha 5 -->
+        <button class="btn" data-value="1">1</button>
+        <button class="btn" data-value="2">2</button>
+        <button class="btn" data-value="3">3</button>
+        <button class="btn operator" data-value="-">-</button>
+        <button class="btn operator" data-value="pi">π</button>
+
+        <!-- Linha 6 -->
+        <button class="btn" data-value="0">0</button>
+        <button class="btn" data-value=".">.</button>
+        <button class="btn equal" data-value="=">=</button>
+        <button class="btn operator" data-value="+">+</button>
+        <button class="btn operator" data-value="exp">e</button>
+    </div>
+</div>
+
+<script>
+    const displayHistory = document.getElementById('history');
+    const displayCurrent = document.getElementById('current-input');
+    const buttons = document.querySelectorAll('.btn');
+
+    let currentInput = '0';
+    let history = '';
+    let hasResult = false;
+
+    // Função para atualizar o display
+    function updateDisplay() {
+        displayHistory.textContent = history;
+        displayCurrent.textContent = currentInput;
+    }
+
+    // Função para tratar a entrada de um valor
+    function handleInput(value) {
+        if (hasResult) {
+            currentInput = value;
+            history = '';
+            hasResult = false;
+        } else if (currentInput === '0' || currentInput === 'Erro') {
+            currentInput = value;
+        } else {
+            currentInput += value;
+        }
+    }
+
+    // Função para tratar o clique dos botões
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            const value = button.dataset.value;
+            handleButtonClick(value);
+        });
+    });
+
+    // Função para tratar o clique dos botões e a entrada do teclado
+    function handleButtonClick(value) {
+        switch (value) {
+            case 'AC':
+                currentInput = '0';
+                history = '';
+                hasResult = false;
+                break;
+            case 'DEL':
+                if (currentInput.length > 1) {
+                    currentInput = currentInput.slice(0, -1);
+                } else {
+                    currentInput = '0';
+                }
+                break;
+            case '=':
+                try {
+                    // Substitui os caracteres do display por equivalentes de JavaScript
+                    let expression = currentInput.replace(/x²/g, '**2')
+                                                .replace(/sin\(/g, 'Math.sin(')
+                                                .replace(/cos\(/g, 'Math.cos(')
+                                                .replace(/tan\(/g, 'Math.tan(')
+                                                .replace(/log\(/g, 'Math.log10(')
+                                                .replace(/ln\(/g, 'Math.log(')
+                                                .replace(/sqrt\(/g, 'Math.sqrt(')
+                                                .replace(/pi/g, 'Math.PI')
+                                                .replace(/exp/g, 'Math.E')
+                                                .replace(/\^/g, '**');
+
+                    // Avalia a expressão e exibe o resultado
+                    history = currentInput + ' =';
+                    currentInput = eval(expression).toString();
+                    hasResult = true;
+                } catch (e) {
+                    currentInput = 'Erro';
+                    hasResult = true;
+                }
+                break;
+            default:
+                handleInput(value);
+                break;
+        }
+        updateDisplay();
+    }
+
+    // Adiciona o suporte ao teclado
+    window.addEventListener('keydown', (e) => {
+        const key = e.key;
+        if (/[0-9]|\./.test(key)) {
+            handleInput(key);
+        } else if (key === '+' || key === '-' || key === '*' || key === '/') {
+            handleInput(key);
+        } else if (key === 'Enter') {
+            handleButtonClick('=');
+        } else if (key === 'Backspace') {
+            handleButtonClick('DEL');
+        }
+        updateDisplay();
+    });
+
+    updateDisplay();
+</script>
+
+</body>
+</html>
